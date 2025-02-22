@@ -46,12 +46,19 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      // Enable automatic background refetching
+      refetchOnWindowFocus: true,
+      // Treat data as fresh for 30 seconds
+      staleTime: 30 * 1000,
+      // Keep unused data in cache for 5 minutes
+      gcTime: 5 * 60 * 1000,
+      // Add retries for better reliability
+      retry: 1,
+      // Show stale data while fetching
+      keepPreviousData: true,
     },
     mutations: {
-      retry: false,
+      retry: 1,
     },
   },
 });

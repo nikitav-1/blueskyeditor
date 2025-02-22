@@ -21,13 +21,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: result.data.password 
       });
 
-      // Set 10 second timeout
+      // Reduce timeout to 5 seconds for faster feedback
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Login timed out")), 10000);
+        setTimeout(() => reject(new Error("Login timed out")), 5000);
       });
 
       await Promise.race([loginPromise, timeoutPromise]);
       const auth = await storage.setBlueskyAuth(result.data);
+
+      // Return quickly to improve perceived performance
       res.json(auth);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Invalid credentials";

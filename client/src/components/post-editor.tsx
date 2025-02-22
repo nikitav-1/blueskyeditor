@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { createPost } from "@/lib/bluesky";
 import { useQueryClient } from "@tanstack/react-query";
-import type { InsertPost } from "@shared/schema";
+import { Loader2 } from "lucide-react";
+import type { InsertPost, Post } from "@shared/schema";
 
 interface PostEditorProps {
   onSchedule: (content: string) => void;
@@ -18,9 +19,20 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
   const queryClient = useQueryClient();
 
   const handlePost = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() || isPosting) return;
 
     setIsPosting(true);
+    // Optimistically update the UI
+    const optimisticPost: Post = {
+      id: Date.now(),
+      content,
+      scheduledFor: null,
+      published: true,
+      isDraft: false
+    };
+
+    queryClient.setQueryData<Post[]>(["/api/posts"], (old = []) => [optimisticPost, ...old]);
+
     try {
       await createPost({ content, scheduledFor: null });
       setContent("");
@@ -30,6 +42,10 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
     } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<Post[]>(["/api/posts"], (old = []) => 
+        old.filter(post => post.id !== optimisticPost.id)
+      );
       toast({
         title: "Error",
         description: "Failed to post. Are you logged in?",
@@ -41,9 +57,20 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
   };
 
   const handleSaveAsDraft = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() || isPosting) return;
 
     setIsPosting(true);
+    // Optimistic update for drafts
+    const optimisticDraft: Post = {
+      id: Date.now(),
+      content,
+      scheduledFor: null,
+      published: false,
+      isDraft: true
+    };
+
+    queryClient.setQueryData<Post[]>(["/api/posts/drafts"], (old = []) => [optimisticDraft, ...old]);
+
     try {
       const res = await fetch("/api/posts/draft", {
         method: "POST",
@@ -58,8 +85,12 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
         title: "Success",
         description: "Saved as draft!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/drafts"] });
     } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<Post[]>(["/api/posts/drafts"], (old = []) => 
+        old.filter(post => post.id !== optimisticDraft.id)
+      );
       toast({
         title: "Error",
         description: "Failed to save draft",
@@ -78,6 +109,7 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="min-h-[120px]"
+          disabled={isPosting}
         />
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
@@ -86,7 +118,14 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
           onClick={handleSaveAsDraft}
           disabled={!content.trim() || isPosting}
         >
-          Save as Draft
+          {isPosting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save as Draft'
+          )}
         </Button>
         <Button
           variant="outline"
@@ -99,7 +138,14 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
           onClick={handlePost}
           disabled={!content.trim() || isPosting}
         >
-          Post Now
+          {isPosting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Posting...
+            </>
+          ) : (
+            'Post Now'
+          )}
         </Button>
       </CardFooter>
     </Card>

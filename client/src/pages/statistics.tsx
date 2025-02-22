@@ -11,40 +11,30 @@ import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 export default function Statistics() {
+  // Place all hooks at the top of the component
   const [timeframe, setTimeframe] = useState("week");
   const [, setLocation] = useLocation();
-  const [metrics, setMetrics] = useState<{ likes: number; views: number; followers: number } | null>(null);
 
-  const { data: auth } = useQuery<BlueskyAuth | null>({
+  const { data: auth, isLoading: isLoadingAuth } = useQuery<BlueskyAuth | null>({
     queryKey: ["/api/auth"],
   });
 
-  const { data: posts = [] } = useQuery<Post[]>({
-    queryKey: ["/api/posts"],
-  });
-
-  // Redirect if not authenticated
-  if (!auth) {
-    setLocation("/editor");
-    return null;
-  }
-
-  // Initialize Bluesky agent and fetch metrics
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ["bluesky-stats", timeframe],
     queryFn: async () => {
+      if (!auth) return null;
+
       const agent = new BskyAgent({ service: "https://bsky.social" });
       await agent.login({ identifier: auth.identifier, password: auth.password });
 
       const profile = await agent.getProfile({ actor: auth.identifier });
       const followers = profile.data.followersCount || 0;
 
-      // Get recent posts to calculate engagement
       const feed = await agent.getAuthorFeed({ actor: auth.identifier });
       const posts = feed.data.feed || [];
 
       const likes = posts.reduce((sum, post) => sum + (post.post.likeCount || 0), 0);
-      const views = posts.reduce((sum, post) => sum + (post.post.repostCount || 0) * 5, 0); // Estimate views
+      const views = posts.reduce((sum, post) => sum + (post.post.repostCount || 0) * 5, 0);
 
       return {
         likes,
@@ -54,19 +44,26 @@ export default function Statistics() {
           date: post.post.indexedAt,
           likes: post.post.likeCount || 0,
           views: (post.post.repostCount || 0) * 5,
-          content: post.post.record.text
+          content: post.post.record.text as string
         }))
       };
     },
     enabled: !!auth
   });
 
-  if (isLoading) {
+  // Handle loading states
+  if (isLoadingAuth || isLoadingStats) {
     return (
       <div className="p-6 pl-24 flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  // Handle unauthorized access
+  if (!auth) {
+    setLocation("/editor");
+    return null;
   }
 
   return (
@@ -179,7 +176,7 @@ export default function Statistics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {stats?.posts.map((post, index) => (
+                {stats?.posts?.map((post, index) => (
                   <motion.div 
                     key={post.date}
                     initial={{ x: -20, opacity: 0 }}

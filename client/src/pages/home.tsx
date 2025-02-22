@@ -9,6 +9,7 @@ import { ScheduleForm } from "@/components/schedule-form";
 import { useToast } from "@/hooks/use-toast";
 import { loginToBluesky } from "@/lib/bluesky";
 import { type BlueskyAuth, type Post } from "@shared/schema";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [identifier, setIdentifier] = useState("");
@@ -27,6 +28,8 @@ export default function Home() {
   });
 
   const handleLogin = async () => {
+    if (!identifier || !password || isLoggingIn) return;
+
     setIsLoggingIn(true);
     try {
       await loginToBluesky({ identifier, password });
@@ -37,13 +40,20 @@ export default function Home() {
       setIdentifier("");
       setPassword("");
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid credentials";
       toast({
         title: "Error",
-        description: "Invalid credentials",
+        description: message,
         variant: "destructive",
       });
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
     }
   };
 
@@ -59,19 +69,30 @@ export default function Home() {
               placeholder="Email or handle"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isLoggingIn}
             />
             <Input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isLoggingIn}
             />
             <Button 
               className="w-full"
               onClick={handleLogin}
               disabled={!identifier || !password || isLoggingIn}
             >
-              Login
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                'Login'
+              )}
             </Button>
           </CardContent>
         </Card>

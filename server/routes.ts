@@ -15,11 +15,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const agent = new BskyAgent({ service: "https://bsky.social" });
     try {
-      await agent.login({ identifier: result.data.identifier, password: result.data.password });
+      // Add timeout to the login request
+      const loginPromise = agent.login({ 
+        identifier: result.data.identifier, 
+        password: result.data.password 
+      });
+
+      // Set 10 second timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Login timed out")), 10000);
+      });
+
+      await Promise.race([loginPromise, timeoutPromise]);
       const auth = await storage.setBlueskyAuth(result.data);
       res.json(auth);
     } catch (error) {
-      res.status(401).json({ error: "Invalid credentials" });
+      const message = error instanceof Error ? error.message : "Invalid credentials";
+      res.status(401).json({ error: message });
     }
   });
 
@@ -40,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const post = await storage.createPost(result.data);
-    
+
     // If no schedule date, post immediately
     if (!post.scheduledFor) {
       const auth = await storage.getBlueskyAuth();

@@ -8,6 +8,7 @@ import { PostPreview } from "@/components/post-preview";
 import { ScheduleForm } from "@/components/schedule-form";
 import { useToast } from "@/hooks/use-toast";
 import { loginToBluesky } from "@/lib/bluesky";
+import { type BlueskyAuth, type Post } from "@shared/schema";
 
 export default function Home() {
   const [identifier, setIdentifier] = useState("");
@@ -17,11 +18,11 @@ export default function Home() {
   const [showSchedule, setShowSchedule] = useState(false);
   const { toast } = useToast();
 
-  const { data: auth } = useQuery({
+  const { data: auth } = useQuery<BlueskyAuth | null>({
     queryKey: ["/api/auth"],
   });
 
-  const { data: posts } = useQuery({
+  const { data: posts = [] } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
   });
 
@@ -82,8 +83,8 @@ export default function Home() {
               setShowSchedule(true);
             }}
           />
-          
-          {posts?.map((post) => (
+
+          {posts.map((post) => (
             <PostPreview key={post.id} post={post} />
           ))}
 

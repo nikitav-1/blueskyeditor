@@ -25,7 +25,12 @@ export class MemStorage implements IStorage {
 
   async createPost(insertPost: InsertPost): Promise<Post> {
     const id = this.currentId++;
-    const post: Post = { ...insertPost, id, published: false };
+    const post: Post = {
+      id,
+      content: insertPost.content,
+      scheduledFor: insertPost.scheduledFor ? new Date(insertPost.scheduledFor) : null,
+      published: false
+    };
     this.posts.set(id, post);
     return post;
   }
@@ -37,7 +42,7 @@ export class MemStorage implements IStorage {
   async updatePost(id: number, update: Partial<Post>): Promise<Post> {
     const post = await this.getPost(id);
     if (!post) throw new Error("Post not found");
-    
+
     const updatedPost = { ...post, ...update };
     this.posts.set(id, updatedPost);
     return updatedPost;

@@ -28,7 +28,7 @@ export function ScheduleForm({ content, open, onClose }: ScheduleFormProps) {
 
     setIsScheduling(true);
     try {
-      await createPost({ content, scheduledFor: date.toISOString() });
+      await createPost({ content, scheduledFor: date });
       toast({
         title: "Success",
         description: "Post scheduled!",

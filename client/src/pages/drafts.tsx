@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { type Post } from "@shared/schema";
-import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { createPost } from "@/lib/bluesky";
 
@@ -20,7 +19,7 @@ export default function Drafts() {
       await createPost({ content: post.content, scheduledFor: null });
       // After publishing, delete the draft
       await fetch(`/api/posts/draft/${post.id}`, { method: "DELETE" });
-      
+
       toast({
         title: "Success",
         description: "Published to Bluesky!",
@@ -40,7 +39,7 @@ export default function Drafts() {
     <div className="p-6 pl-24">
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold">Drafts</h1>
-        
+
         {drafts.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
@@ -63,8 +62,7 @@ export default function Drafts() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="whitespace-pre-wrap">{draft.content}</p>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>Created {format(new Date(draft.createdAt), "PPp")}</span>
+                  <div className="flex items-center justify-end">
                     <Button onClick={() => handlePublish(draft)}>
                       Publish Now
                     </Button>

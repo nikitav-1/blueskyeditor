@@ -2,9 +2,10 @@ import { type Post, type InsertPost, type BlueskyAuth } from "@shared/schema";
 
 export interface IStorage {
   getPosts(): Promise<Post[]>;
-  createPost(post: InsertPost): Promise<Post>;
+  createPost(post: InsertPost & { isDraft: boolean }): Promise<Post>;
   getPost(id: number): Promise<Post | undefined>;
   updatePost(id: number, post: Partial<Post>): Promise<Post>;
+  deletePost(id: number): Promise<void>;
   getBlueskyAuth(): Promise<BlueskyAuth | undefined>;
   setBlueskyAuth(auth: Omit<BlueskyAuth, "id">): Promise<BlueskyAuth>;
 }
@@ -23,13 +24,14 @@ export class MemStorage implements IStorage {
     return Array.from(this.posts.values());
   }
 
-  async createPost(insertPost: InsertPost): Promise<Post> {
+  async createPost(insertPost: InsertPost & { isDraft: boolean }): Promise<Post> {
     const id = this.currentId++;
     const post: Post = {
       id,
       content: insertPost.content,
       scheduledFor: insertPost.scheduledFor ? new Date(insertPost.scheduledFor) : null,
-      published: false
+      published: false,
+      isDraft: insertPost.isDraft
     };
     this.posts.set(id, post);
     return post;
@@ -46,6 +48,10 @@ export class MemStorage implements IStorage {
     const updatedPost = { ...post, ...update };
     this.posts.set(id, updatedPost);
     return updatedPost;
+  }
+
+  async deletePost(id: number): Promise<void> {
+    this.posts.delete(id);
   }
 
   async getBlueskyAuth(): Promise<BlueskyAuth | undefined> {

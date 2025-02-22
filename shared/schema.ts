@@ -7,6 +7,7 @@ export const posts = pgTable("posts", {
   content: text("content").notNull(),
   scheduledFor: timestamp("scheduled_for"),
   published: boolean("published").default(false).notNull(),
+  isDraft: boolean("is_draft").default(false).notNull(),
 });
 
 export const blueskyAuth = pgTable("bluesky_auth", {
@@ -15,7 +16,7 @@ export const blueskyAuth = pgTable("bluesky_auth", {
   password: text("password").notNull(),
 });
 
-export const insertPostSchema = createInsertSchema(posts).omit({ id: true, published: true });
+export const insertPostSchema = createInsertSchema(posts).omit({ id: true, published: true, isDraft: true });
 export const insertBlueskyAuthSchema = createInsertSchema(blueskyAuth).omit({ id: true });
 
 export type InsertPost = z.infer<typeof insertPostSchema>;

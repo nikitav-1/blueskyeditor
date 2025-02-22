@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SideNav } from "@/components/side-nav";
 import NotFound from "@/pages/not-found";
 import Editor from "@/pages/editor";
+import Drafts from "@/pages/drafts";
 import Statistics from "@/pages/statistics";
 
 function Router() {
@@ -12,6 +13,7 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <Redirect to="/editor" />} />
       <Route path="/editor" component={Editor} />
+      <Route path="/drafts" component={Drafts} />
       <Route path="/statistics" component={Statistics} />
       <Route component={NotFound} />
     </Switch>

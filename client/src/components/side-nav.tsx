@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Feather, BarChart2 } from "lucide-react";
+import { Feather, BarChart2, FileText } from "lucide-react";
 
 export function SideNav() {
   const [location] = useLocation();
@@ -14,6 +14,14 @@ export function SideNav() {
             location === "/editor" && "bg-sidebar-accent text-sidebar-accent-foreground"
           )}>
             <Feather className="w-6 h-6" />
+          </a>
+        </Link>
+        <Link href="/drafts">
+          <a className={cn(
+            "p-3 rounded-lg hover:bg-sidebar-accent transition-colors",
+            location === "/drafts" && "bg-sidebar-accent text-sidebar-accent-foreground"
+          )}>
+            <FileText className="w-6 h-6" />
           </a>
         </Link>
         <Link href="/statistics">

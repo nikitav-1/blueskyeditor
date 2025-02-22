@@ -19,7 +19,7 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
 
   const handlePost = async () => {
     if (!content.trim()) return;
-    
+
     setIsPosting(true);
     try {
       await createPost({ content, scheduledFor: null });
@@ -40,6 +40,36 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
     }
   };
 
+  const handleSaveAsDraft = async () => {
+    if (!content.trim()) return;
+
+    setIsPosting(true);
+    try {
+      const res = await fetch("/api/posts/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save draft");
+
+      setContent("");
+      toast({
+        title: "Success",
+        description: "Saved as draft!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save draft",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
@@ -51,6 +81,13 @@ export function PostEditor({ onSchedule }: PostEditorProps) {
         />
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={handleSaveAsDraft}
+          disabled={!content.trim() || isPosting}
+        >
+          Save as Draft
+        </Button>
         <Button
           variant="outline"
           onClick={() => onSchedule(content)}

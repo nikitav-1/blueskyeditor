@@ -1,14 +1,18 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { SideNav } from "@/components/side-nav";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
+import Editor from "@/pages/editor";
+import Statistics from "@/pages/statistics";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={() => <Redirect to="/editor" />} />
+      <Route path="/editor" component={Editor} />
+      <Route path="/statistics" component={Statistics} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -17,7 +21,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
+      <div className="flex">
+        <SideNav />
+        <main className="flex-1">
+          <Router />
+        </main>
+      </div>
       <Toaster />
     </QueryClientProvider>
   );

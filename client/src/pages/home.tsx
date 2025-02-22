@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export default function Home() {
   const [scheduleContent, setScheduleContent] = useState("");
   const [showSchedule, setShowSchedule] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: auth } = useQuery<BlueskyAuth | null>({
     queryKey: ["/api/auth"],
@@ -33,6 +34,8 @@ export default function Home() {
     setIsLoggingIn(true);
     try {
       await loginToBluesky({ identifier, password });
+      // Invalidate the auth query to trigger a refetch
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth"] });
       toast({
         title: "Success",
         description: "Logged in to Bluesky!",

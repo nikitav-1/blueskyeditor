@@ -19,11 +19,12 @@
       "dest": "/server/index.ts"
     },
     {
+      "src": "/_next/(.*)",
+      "dest": "/dist/public/_next/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/dist/public/$1"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

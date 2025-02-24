@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/client/build/index.html"
+      "dest": "index.html"
     }
   ]
 }
